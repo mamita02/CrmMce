@@ -99,25 +99,64 @@ export default function CalendarPage() {
     setCheckingGoogle(false);
   };
 
- const connectGoogle = async () => {
+const connectGoogle = async () => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    // 1️⃣ Récupérer la session active
+    let { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error) {
+      console.error("Erreur récupération session:", error);
+      toast.error("Erreur session");
+      return;
+    }
+
+    // 2️⃣ Si pas de session → utilisateur non connecté
     if (!session) {
       toast.error("Vous devez être connecté");
       return;
     }
 
-    const { data, error } = await supabase.functions.invoke("google-auth");
+    // 3️⃣ Vérifier expiration token (sécurité supplémentaire)
+    const expiresAt = session.expires_at ?? 0;
+    const now = Math.floor(Date.now() / 1000);
 
-    if (error) throw error;
+    if (expiresAt < now) {
+      console.log("Token expiré, refresh...");
+      const { data: refreshed, error: refreshError } =
+        await supabase.auth.refreshSession();
 
-    if (data?.url) {
-      window.location.href = data.url;
+      if (refreshError || !refreshed.session) {
+        toast.error("Session expirée. Reconnectez-vous.");
+        return;
+      }
+
+      session = refreshed.session;
     }
 
-  } catch (err: any) {
-    console.error(err);
-    toast.error("Erreur connexion Google");
+    // 4️⃣ Appel sécurisé Edge Function
+    const { data, error: fnError } =
+      await supabase.functions.invoke("google-auth", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+    if (fnError) {
+      console.error("Erreur function:", fnError);
+      toast.error("Erreur connexion Google");
+      return;
+    }
+
+    // 5️⃣ Redirection vers Google OAuth
+    if (data?.url) {
+      window.location.href = data.url;
+    } else {
+      toast.error("Réponse invalide du serveur");
+    }
+
+  } catch (err) {
+    console.error("Erreur connectGoogle:", err);
+    toast.error("Erreur inattendue");
   }
 };
 
