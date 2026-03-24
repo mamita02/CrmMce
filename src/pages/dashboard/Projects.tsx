@@ -896,7 +896,7 @@ const handleEdit = (project: Project) => {
         {/* DESCRIPTION */}
         <div className="space-y-2 border-t pt-4">
           <Label className="text-muted-foreground text-xs uppercase font-bold tracking-tight">Description / Cahier des charges</Label>
-          <p className="text-sm border p-3 rounded-md bg-muted/20 whitespace-pre-wrap leading-relaxed shadow-sm">
+          <p className="text-sm border p-3 rounded-md bg-muted/20 whitespace-pre-wrap Leadsing-relaxed shadow-sm">
             {selectedProject.description || "Aucune description fournie."}
           </p>
         </div>
@@ -904,7 +904,7 @@ const handleEdit = (project: Project) => {
         {/* PERFORMANCE */}
         <div className="space-y-2 border-t pt-4">
           <Label className="text-muted-foreground text-xs uppercase font-bold tracking-tight">Commentaires de performance</Label>
-          <p className="text-sm border p-3 rounded-md bg-muted/20 whitespace-pre-wrap leading-relaxed shadow-sm italic text-muted-foreground">
+          <p className="text-sm border p-3 rounded-md bg-muted/20 whitespace-pre-wrap Leadsing-relaxed shadow-sm italic text-muted-foreground">
             {selectedProject.performance_comments || "Aucun commentaire pour le moment."}
           </p>
         </div>
@@ -955,7 +955,7 @@ const ProjectCard = ({
             <Globe className="w-3 h-3 text-muted-foreground" />
             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{project.country}</span>
           </div>
-          <h3 className="font-bold text-lg leading-none">{project.name}</h3>
+          <h3 className="font-bold text-lg Leadsing-none">{project.name}</h3>
           <p className="text-sm text-muted-foreground mt-1">{project.client_name}</p>
         </div>
         

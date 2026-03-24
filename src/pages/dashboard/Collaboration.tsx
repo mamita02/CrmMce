@@ -497,7 +497,7 @@ const ProjectCard = ({ project, onViewDetails, onDelete, onEdit, canEdit, canDel
           <Globe className="w-3 h-3 text-muted-foreground" />
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{project.country}</span>
         </div>
-        <h3 className="font-bold text-lg leading-none">{project.name}</h3>
+        <h3 className="font-bold text-lg Leadsing-none">{project.name}</h3>
         <p className="text-sm text-muted-foreground mt-1">{project.client_name}</p>
       </div>
       <DropdownMenu>

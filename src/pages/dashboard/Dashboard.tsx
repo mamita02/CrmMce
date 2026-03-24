@@ -144,7 +144,7 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard title="Leads totaux" value={data?.stats?.total_leads || "0"} change={`+${data?.stats?.new_leads} nouveaux`} changeType="positive" icon={<Users className="w-6 h-6 text-primary" />} />
+          <StatCard title="Leads totaux" value={data?.stats?.total_Leads || "0"} change={`+${data?.stats?.new_Leads} nouveaux`} changeType="positive" icon={<Users className="w-6 h-6 text-primary" />} />
           <StatCard title="Clients confirmés" value={data?.stats?.confirmed_clients || "0"} change={`sur ${data?.stats?.total_clients}`} icon={<UserCheck className="w-6 h-6 text-primary" />} />
           <StatCard title="Projets actifs" value={data?.stats?.active_projects || "0"} change={`/${data?.stats?.total_projects} total`} icon={<FolderKanban className="w-6 h-6 text-primary" />} />
           <StatCard title="Tâches en attente" value={data?.stats?.pending_tasks || "0"} change={data?.stats?.overdue_tasks > 0 ? `${data?.stats?.overdue_tasks} en retard` : "À jour"} changeType={data?.stats?.overdue_tasks > 0 ? "negative" : "positive"} icon={<CheckSquare className="w-6 h-6 text-primary" />} />
@@ -157,8 +157,8 @@ const Dashboard = () => {
             <div className="space-y-4">
               {data?.activities.map((act: any) => (
                 <div key={act.id} className="flex items-center gap-4 p-4 rounded-lg hover:bg-muted/50">
-                  <div className={`p-2 rounded-lg ${act.type === 'lead' ? 'bg-info/10 text-info' : 'bg-warning/10 text-warning'}`}>
-                    {act.type === 'lead' ? <Users size={16} /> : <CheckSquare size={16} />}
+                  <div className={`p-2 rounded-lg ${act.type === 'Leads' ? 'bg-info/10 text-info' : 'bg-warning/10 text-warning'}`}>
+                    {act.type === 'Leads' ? <Users size={16} /> : <CheckSquare size={16} />}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium">{act.message}</p>

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { UserPlus } from "lucide-react";
 import {
   BarChart3,
   Calendar,
@@ -32,14 +33,16 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { icon: <LayoutDashboard className="w-5 h-5" />, label: "Tableau de bord", href: "/dashboard" },
-  { icon: <Users className="w-5 h-5" />, label: "Leads", href: "/dashboard/leads" },
+  { icon: <Users className="w-5 h-5" />, label: "Prospect", href: "/dashboard/Leads" },
   { icon: <UserCheck className="w-5 h-5" />, label: "Clients", href: "/dashboard/clients" },
   { icon: <FolderKanban className="w-5 h-5" />, label: "Projets", href: "/dashboard/projects" },
   { icon: <CheckSquare className="w-5 h-5" />, label: "Tâches", href: "/dashboard/tasks" },
   { icon: <Calendar className="w-5 h-5" />, label: "Calendrier", href: "/dashboard/calendar" },
   { icon: <MessageSquare className="w-5 h-5" />, label: "Collaboration", href: "/dashboard/collaboration" },
   { icon: <FileText className="w-5 h-5" />, label: "Devis", href: "/dashboard/quotes", adminOnly: true },
-  { icon: <BarChart3 className="w-5 h-5" />, label: "Statistiques", href: "/dashboard/stats", adminOnly: true },
+  { icon: <FileText className="w-5 h-5" />, label: "Factures", href: "/dashboard/invoices", adminOnly: true },
+  // MODULE RH
+  { icon: <UserPlus className="w-5 h-5" />, label: "Recrutement", href: "/dashboard/recruitment", adminOnly: true },
 ];
 
 export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
@@ -161,7 +164,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               ) : (
                 <>
                   <div className="text-right hidden sm:block">
-                    <p className="text-sm font-bold leading-none">{profile?.first_name} {profile?.last_name}</p>
+                    <p className="text-sm font-bold Leadsing-none">{profile?.first_name} {profile?.last_name}</p>
                     <p className="text-[10px] text-muted-foreground uppercase font-bold mt-1 tracking-wider">{profile?.role}</p>
                   </div>
                   <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shadow-sm">

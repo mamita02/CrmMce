@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Users, FolderKanban, Building2 } from "lucide-react";
+import { ArrowRight, Building2, FolderKanban, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface StatCardProps {
@@ -58,13 +58,13 @@ export const Hero = () => {
             Plateforme de gestion d'agence
           </div>
           
-          <h1 className="text-5xl lg:text-7xl font-display font-bold text-white mb-6 leading-tight">
+          <h1 className="text-5xl lg:text-7xl font-display font-bold text-white mb-6 Leadsing-tight">
             Gérez votre agence
             <span className="block gradient-text-accent">en toute simplicité</span>
           </h1>
           
           <p className="text-lg lg:text-xl text-white/70 mb-10 max-w-2xl mx-auto">
-            Centralisez vos leads, clients, projets et équipes dans une seule plateforme. 
+            Centralisez vos Leads, clients, projets et équipes dans une seule plateforme. 
             Optimisez votre productivité et développez votre activité.
           </p>
           

@@ -10,8 +10,11 @@ import CalendarPage from "./pages/dashboard/CalendarPage";
 import Clients from "./pages/dashboard/Clients";
 import Collaboration from "./pages/dashboard/Collaboration"; // CHEMIN MAINTENANT CORRECT
 import Dashboard from "./pages/dashboard/Dashboard";
+import Invoices from "./pages/dashboard/Invoices";
 import Leads from "./pages/dashboard/Leads";
 import Projects from "./pages/dashboard/Projects";
+import Quotes from "./pages/dashboard/Quotes";
+import Recruitment from "./pages/dashboard/Recruitment";
 import Settings from "./pages/dashboard/Settings";
 import Tasks from "./pages/dashboard/Tasks";
 import Index from "./pages/Index";
@@ -45,6 +48,9 @@ const App = () => (
           <Route path="/dashboard/calendar" element={<CalendarPage />} />
           <Route path="/dashboard/settings" element={<Settings />} />
           <Route path="/dashboard/collaboration" element={<Collaboration />} />
+          <Route path="/dashboard/quotes" element={<Quotes />} />
+          <Route path="/dashboard/invoices" element={<Invoices />} />
+          <Route path="/dashboard/recruitment" element={<Recruitment />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

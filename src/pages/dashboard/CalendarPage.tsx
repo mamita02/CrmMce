@@ -192,7 +192,7 @@ const connectGoogle = async () => {
     }
   };
 
-  const handleAddEvent = async () => {
+  const handLeadsdEvent = async () => {
     if (!formData.title) return toast.error("Le titre est requis");
 
     const { data: { user } } = await supabase.auth.getUser();

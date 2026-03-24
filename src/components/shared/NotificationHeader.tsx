@@ -187,7 +187,7 @@ export const NotificationHeader = ({ userId, onNotificationClick }: Notification
                         {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: fr })}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 leading-snug">{n.message}</p>
+                    <p className="text-xs text-slate-500 Leadsing-snug">{n.message}</p>
                   </div>
                 </div>
               ))

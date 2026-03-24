@@ -130,7 +130,7 @@ const Login = () => {
           </div>
           <h2 className="text-3xl font-display font-bold mb-4">AgenceCRM</h2>
           <p className="text-white/70">
-            Gerez vos leads, clients et projets en toute simplicité depuis une seule plateforme.
+            Gerez vos Leads, clients et projets en toute simplicité depuis une seule plateforme.
           </p>
         </div>
         <div className="absolute top-1/4 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-pulse-slow" />
