@@ -699,7 +699,7 @@ export default function Invoices() {
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">Factures</h1>
             <p className="text-muted-foreground">Gestion des factures, paiements et relances clients</p>
           </div>
-          <Button onClick={() => handleOpenModal()} className="gap-2 bg-teal-600 hover:bg-teal-700">
+          <Button onClick={() => handleOpenModal()} className="gap-2 bg-primary hover:bg-primary/90">
             <Plus className="w-4 h-4" /> Nouvelle facture
           </Button>
         </div>
