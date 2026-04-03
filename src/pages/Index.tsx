@@ -1,5 +1,5 @@
-import { Hero } from "@/components/shared/Hero";
-import { Showcase } from "@/components/shared/Showcase";
+import { Hero } from "@/components/landing/Hero";
+import { Showcase } from "@/components/landing/Showcase";
 import { Footer } from "@/components/layout/Footer";
 
 export const Index = () => (
