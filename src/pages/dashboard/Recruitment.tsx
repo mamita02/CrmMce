@@ -60,8 +60,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
-// ─── Interfaces ───────────────────────────────────────────────────────────────
-
 interface EmployeeDocument {
   id: string;
   type: string;
@@ -95,46 +93,22 @@ interface Employee {
   emergency_phone?: string;
 }
 
-// ─── Données statiques ────────────────────────────────────────────────────────
-
 const countries = [
-  "Sénégal",
-  "Côte d'Ivoire",
-  "Mali",
-  "Burkina Faso",
-  "Guinée",
-  "Bénin",
-  "Togo",
-  "Niger",
-  "Cameroun",
-  "Congo",
-  "RDC",
-  "Gabon",
-  "Mauritanie",
-  "France",
-  "Autre",
+  "Sénégal", "Côte d'Ivoire", "Mali", "Burkina Faso", "Guinée", "Bénin",
+  "Togo", "Niger", "Cameroun", "Congo", "RDC", "Gabon", "Mauritanie", "France", "Autre",
 ];
 
 const departments = ["Design", "Tech", "Marketing", "Ventes", "RH", "Finance"];
 const contractTypes = ["CDI", "CDD", "Stage", "Freelance"];
 
-// ─── Helper : formater une date ISO en DD/MM/YYYY ─────────────────────────────
 const formatDate = (raw: string | null | undefined): string => {
   if (!raw) return "-";
   const d = new Date(raw);
   if (isNaN(d.getTime())) return raw;
-  return d.toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
 };
 
-// ─── Helper : générer un ID unique sans crypto.randomUUID ────────────────────
-const generateId = () =>
-  `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-
-// ─── Composant principal ──────────────────────────────────────────────────────
+const generateId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 const Recruitment = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -177,7 +151,6 @@ const Recruitment = () => {
     emergency_phone: "",
   });
 
-  // ── Charger les salariés depuis Supabase ───────────────────────────────────
   useEffect(() => {
     const fetchEmployees = async () => {
       setLoading(true);
@@ -188,7 +161,6 @@ const Recruitment = () => {
       if (error) {
         toast.error("Erreur lors du chargement des salariés : " + error.message);
       } else {
-        // Normaliser documents et salary_slips qui peuvent être null en base
         const normalized = (data || []).map((emp) => ({
           ...emp,
           documents: Array.isArray(emp.documents) ? emp.documents : [],
@@ -201,14 +173,12 @@ const Recruitment = () => {
     fetchEmployees();
   }, []);
 
-  // ── Filtre texte ───────────────────────────────────────────────────────────
   const filteredEmployees = employees.filter((emp) =>
     `${emp.first_name} ${emp.last_name} ${emp.email} ${emp.role}`
       .toLowerCase()
       .includes(search.toLowerCase())
   );
 
-  // ── Ouvrir le dialog pour un nouveau salarié ───────────────────────────────
   const handleOpenNewDialog = () => {
     setEditingEmployee(null);
     setFormData({
@@ -234,7 +204,6 @@ const Recruitment = () => {
     setShowNewEmployeeDialog(true);
   };
 
-  // ── Ouvrir le dialog pour modifier ────────────────────────────────────────
   const handleEditEmployee = (emp: Employee) => {
     setEditingEmployee(emp);
     setFormData(emp);
@@ -242,7 +211,6 @@ const Recruitment = () => {
     setShowNewEmployeeDialog(true);
   };
 
-  // ── Upload photo (base64) ──────────────────────────────────────────────────
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -256,21 +224,13 @@ const Recruitment = () => {
     }
   };
 
-  // ── Sauvegarder (créer ou modifier) ───────────────────────────────────────
   const handleSaveEmployee = async () => {
-    if (
-      !formData.first_name ||
-      !formData.last_name ||
-      !formData.email ||
-      !formData.department ||
-      !formData.country
-    ) {
+    if (!formData.first_name || !formData.last_name || !formData.email || !formData.department || !formData.country) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
 
     if (editingEmployee) {
-      // UPDATE
       const { error } = await supabase
         .from("recruited_employees")
         .update(formData)
@@ -292,12 +252,9 @@ const Recruitment = () => {
       setSelectedEmployee(normalized.find((e) => e.id === editingEmployee.id) || null);
       toast.success("Salarié mis à jour avec succès");
     } else {
-      // CREATE
       const insertData = {
         ...formData,
-        photo:
-          formData.photo ||
-          `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.first_name}`,
+        photo: formData.photo || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.first_name}`,
         documents: [],
         salary_slips: [],
         created_at: new Date().toISOString(),
@@ -318,7 +275,6 @@ const Recruitment = () => {
     setShowNewEmployeeDialog(false);
   };
 
-  // ── Supprimer ──────────────────────────────────────────────────────────────
   const handleDeleteClick = (id: string) => {
     setDeleteTargetId(id);
     setShowDeleteDialog(true);
@@ -341,7 +297,6 @@ const Recruitment = () => {
     setDeleteTargetId(null);
   };
 
-  // ── Helper : upload vers Supabase Storage ────────────────────────────────
   const uploadToStorage = async (bucket: string, employeeId: string, file: File): Promise<string | null> => {
     const ext = file.name.split(".").pop();
     const path = `${employeeId}/${generateId()}.${ext}`;
@@ -351,7 +306,6 @@ const Recruitment = () => {
     return data.publicUrl;
   };
 
-  // ── Helper : sync employé en base et state ────────────────────────────────
   const syncEmployee = async (employeeId: string, patch: Partial<Employee>) => {
     const { error } = await supabase.from("recruited_employees").update(patch).eq("id", employeeId);
     if (error) { toast.error("Erreur sauvegarde : " + error.message); return false; }
@@ -361,12 +315,10 @@ const Recruitment = () => {
     return true;
   };
 
-  // ── Helper : parser un entry JSON ou string brut ───────────────────────────
   const parseFileEntry = (entry: string): { name: string; url: string } => {
     try { return JSON.parse(entry); } catch { return { name: entry, url: "" }; }
   };
 
-  // ── Documents ──────────────────────────────────────────────────────────────
   const handleAddDocument = async (employeeId: string, file: File) => {
     const emp = employees.find((e) => e.id === employeeId);
     if (!emp) return;
@@ -391,7 +343,6 @@ const Recruitment = () => {
     if (ok) toast.success("Document supprimé");
   };
 
-  // ── Fiches de paie ─────────────────────────────────────────────────────────
   const handleAddSalarySlip = async (employeeId: string, file: File) => {
     const emp = employees.find((e) => e.id === employeeId);
     if (!emp) return;
@@ -413,7 +364,6 @@ const Recruitment = () => {
     if (ok) toast.success("Fiche de paie supprimée");
   };
 
-  // ── Contrat ────────────────────────────────────────────────────────────────
   const handleAddContract = async (employeeId: string, file: File) => {
     toast.loading("Upload en cours...", { id: "upload" });
     const url = await uploadToStorage("employee-contracts", employeeId, file);
@@ -423,7 +373,6 @@ const Recruitment = () => {
     if (ok) toast.success("Contrat ajouté");
   };
 
-  // ── CV ─────────────────────────────────────────────────────────────────────
   const handleAddCV = async (employeeId: string, file: File) => {
     toast.loading("Upload en cours...", { id: "upload" });
     const url = await uploadToStorage("employee-cvs", employeeId, file);
@@ -433,7 +382,6 @@ const Recruitment = () => {
     if (ok) toast.success("CV ajouté");
   };
 
-  // ── Téléchargement ─────────────────────────────────────────────────────────
   const handleDownloadDocument = (fileNameOrJson: string) => {
     try {
       const parsed = JSON.parse(fileNameOrJson);
@@ -443,12 +391,10 @@ const Recruitment = () => {
       a.target = "_blank";
       a.click();
     } catch {
-      toast.error("Fichier non disponible (uploadé avant la mise à jour)");
+      toast.error("Fichier non disponible");
     }
   };
 
-
-  // ── Ajouter/Remplacer fiche de poste ──────────────────────────────────────
   const handleAddJobDescription = async (employeeId: string, file: File) => {
     toast.loading("Upload en cours...", { id: "upload" });
     const url = await uploadToStorage("employee-documents", employeeId, file);
@@ -458,7 +404,6 @@ const Recruitment = () => {
     if (ok) toast.success("Fiche de poste ajoutée");
   };
 
-  // ── Supprimer contrat ─────────────────────────────────────────────────────
   const handleDeleteContract = (employeeId: string) => {
     confirmAction("Supprimer le contrat ?", "Cette action est irréversible.", async () => {
       const ok = await syncEmployee(employeeId, { contract_file: null });
@@ -467,7 +412,6 @@ const Recruitment = () => {
     });
   };
 
-  // ── Supprimer CV ──────────────────────────────────────────────────────────
   const handleDeleteCV = (employeeId: string) => {
     confirmAction("Supprimer le CV ?", "Cette action est irréversible.", async () => {
       const ok = await syncEmployee(employeeId, { cv_file: null });
@@ -476,7 +420,6 @@ const Recruitment = () => {
     });
   };
 
-  // ── Supprimer fiche de poste ──────────────────────────────────────────────
   const handleDeleteJobDescription = (employeeId: string) => {
     confirmAction("Supprimer la fiche de poste ?", "Cette action est irréversible.", async () => {
       const ok = await syncEmployee(employeeId, { job_description_file: null });
@@ -485,7 +428,6 @@ const Recruitment = () => {
     });
   };
 
-  // ── Supprimer document avec confirm ───────────────────────────────────────
   const handleDeleteDocumentConfirm = (employeeId: string, docId: string, docName: string) => {
     confirmAction(`Supprimer "${docName}" ?`, "Ce document sera définitivement supprimé.", async () => {
       await handleDeleteDocument(employeeId, docId);
@@ -493,7 +435,6 @@ const Recruitment = () => {
     });
   };
 
-  // ── Supprimer fiche de paie avec confirm ──────────────────────────────────
   const handleDeleteSalarySlipConfirm = (employeeId: string, idx: number, slipName: string) => {
     confirmAction(`Supprimer "${slipName}" ?`, "Cette fiche sera définitivement supprimée.", async () => {
       await handleDeleteSalarySlip(employeeId, idx);
@@ -501,753 +442,306 @@ const Recruitment = () => {
     });
   };
 
-  // ─── Rendu ─────────────────────────────────────────────────────────────────
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* HEADER */}
-        <div className="flex justify-between items-center">
+        {/* HEADER - Responsive */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
           <div>
-            <h1 className="text-3xl font-bold">Gestion du Recrutement</h1>
-            <p className="text-muted-foreground">
-              Gérez les salariés et le recrutement de l'agence ({employees.length} salarié
-              {employees.length > 1 ? "s" : ""})
+            <h1 className="text-2xl sm:text-3xl font-bold">Recrutement</h1>
+            <p className="text-xs sm:text-base text-muted-foreground">
+              {employees.length} salarié{employees.length > 1 ? "s" : ""}
             </p>
           </div>
 
           <Dialog open={showNewEmployeeDialog} onOpenChange={setShowNewEmployeeDialog}>
             <DialogTrigger asChild>
-              <Button className="gap-2" onClick={handleOpenNewDialog}>
+              <Button className="gap-2 text-xs sm:text-sm w-full sm:w-auto" onClick={handleOpenNewDialog}>
                 <Plus className="w-4 h-4" />
-                Ajouter un salarié
+                Ajouter salarié
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-[95vw] sm:w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
               <DialogHeader>
-                <DialogTitle>
-                  {editingEmployee ? "Modifier le salarié" : "Ajouter un nouveau salarié"}
+                <DialogTitle className="text-base sm:text-lg">
+                  {editingEmployee ? "Modifier le salarié" : "Ajouter un salarié"}
                 </DialogTitle>
               </DialogHeader>
 
               <div className="space-y-4">
-                {/* PHOTO UPLOAD */}
-                <div className="flex flex-col items-center gap-4">
-                  <Avatar className="w-20 h-20">
+                {/* PHOTO */}
+                <div className="flex flex-col items-center gap-3">
+                  <Avatar className="w-16 h-16">
                     <AvatarImage src={photoPreview} />
-                    <AvatarFallback>
-                      {formData.first_name?.charAt(0)}
-                      {formData.last_name?.charAt(0)}
+                    <AvatarFallback className="text-sm">
+                      {formData.first_name?.charAt(0)}{formData.last_name?.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button variant="outline" size="sm" className="gap-2 text-xs sm:text-sm">
                     <Upload className="w-4 h-4" />
                     <label className="cursor-pointer">
-                      Importer une photo
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePhotoUpload}
-                        className="hidden"
-                      />
+                      Photo
+                      <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
                     </label>
                   </Button>
                 </div>
 
-                {/* INFORMATIONS PERSONNELLES */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* FORM - Responsive Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <Label>Prénom *</Label>
-                    <Input
-                      placeholder="Prénom"
-                      value={formData.first_name || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, first_name: e.target.value })
-                      }
-                    />
+                    <Label className="text-xs sm:text-sm">Prénom *</Label>
+                    <Input placeholder="Prénom" value={formData.first_name || ""} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} className="h-9 text-xs sm:text-sm" />
                   </div>
                   <div>
-                    <Label>Nom *</Label>
-                    <Input
-                      placeholder="Nom"
-                      value={formData.last_name || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, last_name: e.target.value })
-                      }
-                    />
+                    <Label className="text-xs sm:text-sm">Nom *</Label>
+                    <Input placeholder="Nom" value={formData.last_name || ""} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} className="h-9 text-xs sm:text-sm" />
                   </div>
                   <div>
-                    <Label>Email *</Label>
-                    <Input
-                      type="email"
-                      placeholder="email@agence.com"
-                      value={formData.email || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                    />
+                    <Label className="text-xs sm:text-sm">Email *</Label>
+                    <Input type="email" placeholder="email@agence.com" value={formData.email || ""} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="h-9 text-xs sm:text-sm" />
                   </div>
                   <div>
-                    <Label>Téléphone</Label>
-                    <Input
-                      placeholder="+221771234567"
-                      value={formData.phone || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, phone: e.target.value })
-                      }
-                    />
+                    <Label className="text-xs sm:text-sm">Téléphone</Label>
+                    <Input placeholder="+221771234567" value={formData.phone || ""} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="h-9 text-xs sm:text-sm" />
                   </div>
                   <div>
-                    <Label>Poste</Label>
-                    <Input
-                      placeholder="Ex: Développeur"
-                      value={formData.role || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, role: e.target.value })
-                      }
-                    />
+                    <Label className="text-xs sm:text-sm">Poste</Label>
+                    <Input placeholder="Ex: Développeur" value={formData.role || ""} onChange={(e) => setFormData({ ...formData, role: e.target.value })} className="h-9 text-xs sm:text-sm" />
                   </div>
                   <div>
-                    <Label>Pays *</Label>
-                    <Select
-                      value={formData.country || ""}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, country: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un pays" />
-                      </SelectTrigger>
+                    <Label className="text-xs sm:text-sm">Pays *</Label>
+                    <Select value={formData.country || ""} onValueChange={(value) => setFormData({ ...formData, country: value })}>
+                      <SelectTrigger className="h-9 text-xs sm:text-sm"><SelectValue placeholder="Pays" /></SelectTrigger>
                       <SelectContent>
                         {countries.map((country) => (
-                          <SelectItem key={country} value={country}>
-                            {country}
-                          </SelectItem>
+                          <SelectItem key={country} value={country} className="text-xs sm:text-sm">{country}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label>Département *</Label>
-                    <Select
-                      value={formData.department || ""}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, department: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un département" />
-                      </SelectTrigger>
+                    <Label className="text-xs sm:text-sm">Département *</Label>
+                    <Select value={formData.department || ""} onValueChange={(value) => setFormData({ ...formData, department: value })}>
+                      <SelectTrigger className="h-9 text-xs sm:text-sm"><SelectValue placeholder="Département" /></SelectTrigger>
                       <SelectContent>
                         {departments.map((dept) => (
-                          <SelectItem key={dept} value={dept}>
-                            {dept}
-                          </SelectItem>
+                          <SelectItem key={dept} value={dept} className="text-xs sm:text-sm">{dept}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label>Type de contrat</Label>
-                    <Select
-                      value={formData.contract_type || ""}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, contract_type: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un type" />
-                      </SelectTrigger>
+                    <Label className="text-xs sm:text-sm">Type contrat</Label>
+                    <Select value={formData.contract_type || ""} onValueChange={(value) => setFormData({ ...formData, contract_type: value })}>
+                      <SelectTrigger className="h-9 text-xs sm:text-sm"><SelectValue placeholder="Type" /></SelectTrigger>
                       <SelectContent>
                         {contractTypes.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
+                          <SelectItem key={type} value={type} className="text-xs sm:text-sm">{type}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label>Date d'embauche</Label>
-                    <Input
-                      type="date"
-                      value={formData.hire_date || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, hire_date: e.target.value })
-                      }
-                    />
+                    <Label className="text-xs sm:text-sm">Embauche</Label>
+                    <Input type="date" value={formData.hire_date || ""} onChange={(e) => setFormData({ ...formData, hire_date: e.target.value })} className="h-9 text-xs sm:text-sm" />
                   </div>
                   <div>
-                    <Label>Salaire (CFA)</Label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      value={formData.salary || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          salary: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                    />
+                    <Label className="text-xs sm:text-sm">Salaire (CFA)</Label>
+                    <Input type="number" placeholder="0" value={formData.salary || ""} onChange={(e) => setFormData({ ...formData, salary: parseFloat(e.target.value) || 0 })} className="h-9 text-xs sm:text-sm" />
                   </div>
                 </div>
 
-                {/* FICHE DE POSTE */}
+                {/* Adresse */}
                 <div>
-                  <Label>Fiche de poste (PDF, Word...)</Label>
-                  <Input
-                    type="file"
-                    accept=".pdf,.doc,.docx,.odt,.txt"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setFormData({ ...formData, job_description_file: file.name });
-                        toast.success("Fichier sélectionné : " + file.name);
-                      }
-                    }}
-                  />
-                  {formData.job_description_file && (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Fichier : {formData.job_description_file}
-                    </p>
-                  )}
+                  <Label className="text-xs sm:text-sm">Adresse</Label>
+                  <Input placeholder="Adresse" value={formData.address || ""} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="h-9 text-xs sm:text-sm" />
                 </div>
 
-                {/* ADRESSE */}
-                <div>
-                  <Label>Adresse</Label>
-                  <Input
-                    placeholder="Adresse du salarié"
-                    value={formData.address || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
-                  />
-                </div>
-
-                {/* CONTACT D'URGENCE */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* Contact d'urgence */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <Label>Contact d'urgence</Label>
-                    <Input
-                      placeholder="Nom du contact"
-                      value={formData.emergency_contact || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, emergency_contact: e.target.value })
-                      }
-                    />
+                    <Label className="text-xs sm:text-sm">Contact urgence</Label>
+                    <Input placeholder="Nom" value={formData.emergency_contact || ""} onChange={(e) => setFormData({ ...formData, emergency_contact: e.target.value })} className="h-9 text-xs sm:text-sm" />
                   </div>
                   <div>
-                    <Label>Téléphone d'urgence</Label>
-                    <Input
-                      placeholder="+221..."
-                      value={formData.emergency_phone || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, emergency_phone: e.target.value })
-                      }
-                    />
+                    <Label className="text-xs sm:text-sm">Tél urgence</Label>
+                    <Input placeholder="+221..." value={formData.emergency_phone || ""} onChange={(e) => setFormData({ ...formData, emergency_phone: e.target.value })} className="h-9 text-xs sm:text-sm" />
                   </div>
                 </div>
 
-                {/* STATUT */}
+                {/* Statut */}
                 <div>
-                  <Label>Statut</Label>
-                  <Select
-                    value={formData.status || "active"}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, status: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un statut" />
-                    </SelectTrigger>
+                  <Label className="text-xs sm:text-sm">Statut</Label>
+                  <Select value={formData.status || "active"} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                    <SelectTrigger className="h-9 text-xs sm:text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="active">Actif</SelectItem>
-                      <SelectItem value="inactive">Inactif</SelectItem>
-                      <SelectItem value="on_leave">En congé</SelectItem>
+                      <SelectItem value="active" className="text-xs sm:text-sm">Actif</SelectItem>
+                      <SelectItem value="inactive" className="text-xs sm:text-sm">Inactif</SelectItem>
+                      <SelectItem value="on_leave" className="text-xs sm:text-sm">En congé</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* NOTES */}
+                {/* Notes */}
                 <div>
-                  <Label>Notes</Label>
-                  <Textarea
-                    placeholder="Notes internes..."
-                    value={formData.notes || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, notes: e.target.value })
-                    }
-                    rows={3}
-                  />
+                  <Label className="text-xs sm:text-sm">Notes</Label>
+                  <Textarea placeholder="Notes..." value={formData.notes || ""} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} rows={2} className="text-xs sm:text-sm" />
                 </div>
               </div>
 
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowNewEmployeeDialog(false)}
-                >
-                  Annuler
-                </Button>
-                <Button onClick={handleSaveEmployee}>
-                  {editingEmployee ? "Mettre à jour" : "Ajouter"}
-                </Button>
+              <DialogFooter className="gap-2 flex-col-reverse sm:flex-row">
+                <Button variant="outline" onClick={() => setShowNewEmployeeDialog(false)} className="text-xs sm:text-sm w-full sm:w-auto">Annuler</Button>
+                <Button onClick={handleSaveEmployee} className="text-xs sm:text-sm w-full sm:w-auto">{editingEmployee ? "Mettre à jour" : "Ajouter"}</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
 
-        <div className="grid grid-cols-12 gap-6">
-          {/* TABLEAU DES SALARIÉS */}
+        <div className="grid grid-cols-1 gap-6">
+          {/* TABLEAU */}
           <div className="col-span-full">
-            {/* BARRE DE RECHERCHE */}
             <div className="relative mb-4">
               <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher par nom, email, poste..."
-                className="pl-10"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+              <Input placeholder="Rechercher..." className="pl-10 text-xs sm:text-sm h-9" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
 
             <div className="bg-white border rounded-lg overflow-hidden">
               {loading ? (
-                <div className="p-6 text-center text-muted-foreground">
-                  Chargement...
-                </div>
+                <div className="p-6 text-center text-muted-foreground text-xs sm:text-sm">Chargement...</div>
               ) : filteredEmployees.length === 0 ? (
-                <div className="p-6 text-center text-muted-foreground">
-                  Aucun salarié trouvé
-                </div>
+                <div className="p-6 text-center text-muted-foreground text-xs sm:text-sm">Aucun salarié</div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead>Photo</TableHead>
-                      <TableHead>Nom</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Téléphone</TableHead>
-                      <TableHead>Poste</TableHead>
-                      <TableHead>Département</TableHead>
-                      <TableHead>Pays</TableHead>
-                      <TableHead>Contrat</TableHead>
-                      <TableHead>Salaire</TableHead>
-                      <TableHead>Embauche</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredEmployees.map((emp) => (
-                      <TableRow
-                        key={emp.id}
-                        className="hover:bg-muted/50 cursor-pointer"
-                        onClick={() => setSelectedEmployee(emp)}
-                      >
-                        <TableCell>
-                          <Avatar className="w-8 h-8">
-                            <AvatarImage src={emp.photo} />
-                            <AvatarFallback>
-                              {emp.first_name.charAt(0)}
-                              {emp.last_name.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {emp.first_name} {emp.last_name}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {emp.email}
-                        </TableCell>
-                        <TableCell className="text-sm">{emp.phone}</TableCell>
-                        <TableCell className="text-sm">{emp.role}</TableCell>
-                        <TableCell className="text-sm">{emp.department}</TableCell>
-                        <TableCell className="text-sm">{emp.country}</TableCell>
-                        <TableCell className="text-sm">
-                          <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium">
-                            {emp.contract_type || "-"}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-sm font-semibold">
-                          {emp.salary ? emp.salary.toLocaleString("fr-FR") : "-"} CFA
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {formatDate(emp.hire_date)}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          <span
-                            className={
-                              emp.status === "active"
-                                ? "bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium"
-                                : emp.status === "on_leave"
-                                ? "bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium"
-                                : "bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs font-medium"
-                            }
-                          >
-                            {emp.status === "active"
-                              ? "Actif"
-                              : emp.status === "on_leave"
-                              ? "En congé"
-                              : emp.status === "inactive"
-                              ? "Inactif"
-                              : emp.status || "-"}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              asChild
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditEmployee(emp);
-                                }}
-                              >
-                                <Pencil className="w-4 h-4 mr-2" />
-                                Modifier
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteClick(emp.id);
-                                }}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Supprimer
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="text-xs">Photo</TableHead>
+                        <TableHead className="text-xs">Nom</TableHead>
+                        <TableHead className="text-xs hidden sm:table-cell">Email</TableHead>
+                        <TableHead className="text-xs hidden md:table-cell">Poste</TableHead>
+                        <TableHead className="text-xs hidden lg:table-cell">Dept</TableHead>
+                        <TableHead className="text-xs hidden lg:table-cell">Contrat</TableHead>
+                        <TableHead className="text-xs hidden xl:table-cell">Statut</TableHead>
+                        <TableHead className="text-xs text-right">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredEmployees.map((emp) => (
+                        <TableRow key={emp.id} className="hover:bg-muted/50 cursor-pointer text-xs sm:text-sm" onClick={() => setSelectedEmployee(emp)}>
+                          <TableCell className="p-2"><Avatar className="w-6 h-6"><AvatarImage src={emp.photo} /><AvatarFallback className="text-[10px]">{emp.first_name.charAt(0)}{emp.last_name.charAt(0)}</AvatarFallback></Avatar></TableCell>
+                          <TableCell className="font-medium">{emp.first_name} {emp.last_name}</TableCell>
+                          <TableCell className="hidden sm:table-cell">{emp.email}</TableCell>
+                          <TableCell className="hidden md:table-cell">{emp.role}</TableCell>
+                          <TableCell className="hidden lg:table-cell">{emp.department}</TableCell>
+                          <TableCell className="hidden lg:table-cell"><span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-medium">{emp.contract_type || "-"}</span></TableCell>
+                          <TableCell className="hidden xl:table-cell"><span className={`px-2 py-0.5 rounded text-[10px] font-medium ${emp.status === "active" ? "bg-green-100 text-green-800" : emp.status === "on_leave" ? "bg-yellow-100 text-yellow-800" : "bg-gray-200 text-gray-800"}`}>{emp.status === "active" ? "Actif" : emp.status === "on_leave" ? "Congé" : "Inactif"}</span></TableCell>
+                          <TableCell className="text-right p-2"><DropdownMenu><DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}><Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditEmployee(emp); }} className="text-xs"><Pencil className="w-4 h-4 mr-2" />Modifier</DropdownMenuItem><DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDeleteClick(emp.id); }} className="text-destructive text-xs"><Trash2 className="w-4 h-4 mr-2" />Supprimer</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </div>
           </div>
 
-          {/* FICHE DÉTAILLÉE */}
+          {/* FICHE DÉTAILLÉE - Responsive */}
           {selectedEmployee && (
             <div className="col-span-full border-t pt-6">
-              <div className="bg-white border rounded-lg p-6">
-                <div className="flex justify-between items-start mb-6">
-                  <div className="flex gap-4 items-start">
-                    <Avatar className="w-16 h-16">
+              <div className="bg-white border rounded-lg p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
+                  <div className="flex gap-3 items-start">
+                    <Avatar className="w-12 h-12 sm:w-16 sm:h-16">
                       <AvatarImage src={selectedEmployee.photo} />
-                      <AvatarFallback>
-                        {selectedEmployee.first_name.charAt(0)}
-                        {selectedEmployee.last_name.charAt(0)}
-                      </AvatarFallback>
+                      <AvatarFallback className="text-sm">{selectedEmployee.first_name.charAt(0)}{selectedEmployee.last_name.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <div>
-                      <h2 className="text-2xl font-bold">
-                        {selectedEmployee.first_name} {selectedEmployee.last_name}
-                      </h2>
-                      <p className="text-muted-foreground text-sm">
-                        {selectedEmployee.role}
-                      </p>
-                      <span
-                        className={
-                          selectedEmployee.status === "active"
-                            ? "mt-1 inline-block bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs font-medium"
-                            : selectedEmployee.status === "on_leave"
-                            ? "mt-1 inline-block bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-xs font-medium"
-                            : "mt-1 inline-block bg-gray-200 text-gray-800 px-2 py-0.5 rounded text-xs font-medium"
-                        }
-                      >
-                        {selectedEmployee.status === "active"
-                          ? "Actif"
-                          : selectedEmployee.status === "on_leave"
-                          ? "En congé"
-                          : "Inactif"}
+                    <div className="min-w-0">
+                      <h2 className="text-lg sm:text-2xl font-bold">{selectedEmployee.first_name} {selectedEmployee.last_name}</h2>
+                      <p className="text-muted-foreground text-xs sm:text-sm">{selectedEmployee.role}</p>
+                      <span className={`mt-1 inline-block px-2 py-0.5 rounded text-[10px] sm:text-xs font-medium ${selectedEmployee.status === "active" ? "bg-green-100 text-green-800" : selectedEmployee.status === "on_leave" ? "bg-yellow-100 text-yellow-800" : "bg-gray-200 text-gray-800"}`}>
+                        {selectedEmployee.status === "active" ? "Actif" : selectedEmployee.status === "on_leave" ? "Congé" : "Inactif"}
                       </span>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditEmployee(selectedEmployee)}
-                    >
-                      <Pencil className="w-4 h-4 mr-2" />
-                      Modifier
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setSelectedEmployee(null)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button variant="outline" size="sm" onClick={() => handleEditEmployee(selectedEmployee)} className="gap-1 text-xs"><Pencil className="w-4 h-4" /> Modifier</Button>
+                    <Button variant="outline" size="icon" onClick={() => setSelectedEmployee(null)} className="h-8 w-8"><X className="w-4 h-4" /></Button>
                   </div>
                 </div>
 
                 <Tabs defaultValue="info">
-                  <TabsList className="flex-wrap">
-                    <TabsTrigger value="info">Informations</TabsTrigger>
-                    <TabsTrigger value="fiche">Fiche de poste</TabsTrigger>
-                    <TabsTrigger value="documents">
-                      Documents ({selectedEmployee.documents?.length || 0})
-                    </TabsTrigger>
-                    <TabsTrigger value="salary">
-                      Fiches de paie ({selectedEmployee.salary_slips?.length || 0})
-                    </TabsTrigger>
-                    <TabsTrigger value="contract">Contrat</TabsTrigger>
-                    <TabsTrigger value="cv">CV</TabsTrigger>
+                  <TabsList className="grid grid-cols-2 sm:grid-cols-6 gap-1 sm:gap-0 mb-4 text-xs sm:text-sm flex-wrap">
+                    <TabsTrigger value="info" className="text-[11px] sm:text-sm">Infos</TabsTrigger>
+                    <TabsTrigger value="fiche" className="text-[11px] sm:text-sm">Fiche</TabsTrigger>
+                    <TabsTrigger value="documents" className="text-[11px] sm:text-sm">Docs ({selectedEmployee.documents?.length || 0})</TabsTrigger>
+                    <TabsTrigger value="salary" className="text-[11px] sm:text-sm">Fiches ({selectedEmployee.salary_slips?.length || 0})</TabsTrigger>
+                    <TabsTrigger value="contract" className="text-[11px] sm:text-sm">Contrat</TabsTrigger>
+                    <TabsTrigger value="cv" className="text-[11px] sm:text-sm">CV</TabsTrigger>
                   </TabsList>
 
-                  {/* INFORMATIONS */}
-                  <TabsContent value="info" className="space-y-4 mt-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="border p-4 rounded">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase">Email</p>
-                        <p className="mt-1">{selectedEmployee.email}</p>
-                      </div>
-                      <div className="border p-4 rounded">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase">Téléphone</p>
-                        <p className="mt-1">{selectedEmployee.phone || "-"}</p>
-                      </div>
-                      <div className="border p-4 rounded">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase">Poste</p>
-                        <p className="mt-1">{selectedEmployee.role || "-"}</p>
-                      </div>
-                      <div className="border p-4 rounded">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase">Département</p>
-                        <p className="mt-1">{selectedEmployee.department}</p>
-                      </div>
-                      <div className="border p-4 rounded">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase">Pays</p>
-                        <p className="mt-1">{selectedEmployee.country}</p>
-                      </div>
-                      <div className="border p-4 rounded">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase">Type de contrat</p>
-                        <p className="mt-1">{selectedEmployee.contract_type || "-"}</p>
-                      </div>
-                      <div className="border p-4 rounded">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase">Date d'embauche</p>
-                        <p className="mt-1">{formatDate(selectedEmployee.hire_date)}</p>
-                      </div>
-                      <div className="border p-4 rounded">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase">Salaire</p>
-                        <p className="mt-1 font-semibold">
-                          {selectedEmployee.salary?.toLocaleString("fr-FR") || "-"} CFA
-                        </p>
-                      </div>
-                      {selectedEmployee.address && (
-                        <div className="border p-4 rounded col-span-2">
-                          <p className="text-xs font-semibold text-muted-foreground uppercase">Adresse</p>
-                          <p className="mt-1">{selectedEmployee.address}</p>
-                        </div>
-                      )}
-                      {selectedEmployee.emergency_contact && (
-                        <div className="border p-4 rounded">
-                          <p className="text-xs font-semibold text-muted-foreground uppercase">Contact d'urgence</p>
-                          <p className="mt-1">{selectedEmployee.emergency_contact}</p>
-                        </div>
-                      )}
-                      {selectedEmployee.emergency_phone && (
-                        <div className="border p-4 rounded">
-                          <p className="text-xs font-semibold text-muted-foreground uppercase">Tél. urgence</p>
-                          <p className="mt-1">{selectedEmployee.emergency_phone}</p>
-                        </div>
-                      )}
-                      {selectedEmployee.notes && (
-                        <div className="border p-4 rounded col-span-2">
-                          <p className="text-xs font-semibold text-muted-foreground uppercase">Notes</p>
-                          <p className="mt-1 text-sm text-muted-foreground">{selectedEmployee.notes}</p>
-                        </div>
-                      )}
+                  <TabsContent value="info" className="space-y-3 mt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="border p-3 rounded"><p className="text-xs font-semibold text-muted-foreground uppercase">Email</p><p className="mt-1 text-xs sm:text-sm">{selectedEmployee.email}</p></div>
+                      <div className="border p-3 rounded"><p className="text-xs font-semibold text-muted-foreground uppercase">Téléphone</p><p className="mt-1 text-xs sm:text-sm">{selectedEmployee.phone || "-"}</p></div>
+                      <div className="border p-3 rounded"><p className="text-xs font-semibold text-muted-foreground uppercase">Poste</p><p className="mt-1 text-xs sm:text-sm">{selectedEmployee.role || "-"}</p></div>
+                      <div className="border p-3 rounded"><p className="text-xs font-semibold text-muted-foreground uppercase">Département</p><p className="mt-1 text-xs sm:text-sm">{selectedEmployee.department}</p></div>
+                      <div className="border p-3 rounded"><p className="text-xs font-semibold text-muted-foreground uppercase">Pays</p><p className="mt-1 text-xs sm:text-sm">{selectedEmployee.country}</p></div>
+                      <div className="border p-3 rounded"><p className="text-xs font-semibold text-muted-foreground uppercase">Contrat</p><p className="mt-1 text-xs sm:text-sm">{selectedEmployee.contract_type || "-"}</p></div>
+                      <div className="border p-3 rounded"><p className="text-xs font-semibold text-muted-foreground uppercase">Embauche</p><p className="mt-1 text-xs sm:text-sm">{formatDate(selectedEmployee.hire_date)}</p></div>
+                      <div className="border p-3 rounded"><p className="text-xs font-semibold text-muted-foreground uppercase">Salaire</p><p className="mt-1 text-xs sm:text-sm font-semibold">{selectedEmployee.salary?.toLocaleString("fr-FR") || "-"} CFA</p></div>
+                      {selectedEmployee.address && <div className="border p-3 rounded col-span-full"><p className="text-xs font-semibold text-muted-foreground uppercase">Adresse</p><p className="mt-1 text-xs sm:text-sm">{selectedEmployee.address}</p></div>}
+                      {selectedEmployee.emergency_contact && <div className="border p-3 rounded"><p className="text-xs font-semibold text-muted-foreground uppercase">Urgence</p><p className="mt-1 text-xs sm:text-sm">{selectedEmployee.emergency_contact}</p></div>}
+                      {selectedEmployee.notes && <div className="border p-3 rounded col-span-full"><p className="text-xs font-semibold text-muted-foreground uppercase">Notes</p><p className="mt-1 text-xs sm:text-sm text-muted-foreground">{selectedEmployee.notes}</p></div>}
                     </div>
                   </TabsContent>
 
-                  {/* FICHE DE POSTE */}
-                  <TabsContent value="fiche" className="space-y-4 mt-4">
+                  <TabsContent value="fiche" className="space-y-3 mt-4">
                     {selectedEmployee.job_description_file ? (
-                      <div className="flex items-center gap-3 p-4 border rounded-lg bg-slate-50">
-                        <FileText className="w-5 h-5 text-primary shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {parseFileEntry(selectedEmployee.job_description_file).name}
-                          </p>
-                        </div>
-                        <div className="flex gap-2 shrink-0">
-                          <Button size="sm" variant="outline" className="gap-1"
-                            onClick={() => handleDownloadDocument(selectedEmployee.job_description_file!)}>
-                            <Download className="w-4 h-4" /> Télécharger
-                          </Button>
-                          <Button size="sm" variant="outline" className="gap-1 relative">
-                            <RefreshCw className="w-4 h-4" /> Remplacer
-                            <input type="file" accept=".pdf,.doc,.docx,.odt,.txt"
-                              className="absolute inset-0 opacity-0 cursor-pointer"
-                              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddJobDescription(selectedEmployee.id, f); }} />
-                          </Button>
-                          <Button size="sm" variant="outline" className="gap-1 text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteJobDescription(selectedEmployee.id)}>
-                            <Trash2 className="w-4 h-4" /> Supprimer
-                          </Button>
-                        </div>
-                      </div>
+                      <div className="flex items-center gap-3 p-3 border rounded-lg bg-slate-50 flex-col sm:flex-row"><FileText className="w-5 h-5 text-primary shrink-0" /><div className="flex-1 min-w-0"><p className="text-xs sm:text-sm font-medium truncate">{parseFileEntry(selectedEmployee.job_description_file).name}</p></div><div className="flex gap-2 shrink-0 w-full sm:w-auto"><Button size="sm" variant="outline" className="gap-1 flex-1 sm:flex-none text-xs" onClick={() => handleDownloadDocument(selectedEmployee.job_description_file!)}><Download className="w-4 h-4" /> Dl</Button><Button size="sm" variant="outline" className="gap-1 flex-1 sm:flex-none text-xs relative"><RefreshCw className="w-4 h-4" /> Remplacer<input type="file" accept=".pdf,.doc,.docx,.odt,.txt" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddJobDescription(selectedEmployee.id, f); }} /></Button><Button size="sm" variant="outline" className="gap-1 flex-1 sm:flex-none text-destructive text-xs" onClick={() => handleDeleteJobDescription(selectedEmployee.id)}><Trash2 className="w-4 h-4" /> Supprimer</Button></div></div>
                     ) : (
-                      <Button variant="outline" className="gap-2 relative">
-                        <FileText className="w-4 h-4" /> Ajouter une fiche de poste
-                        <input type="file" accept=".pdf,.doc,.docx,.odt,.txt"
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddJobDescription(selectedEmployee.id, f); }} />
-                      </Button>
+                      <Button variant="outline" className="gap-2 relative w-full text-xs sm:text-sm"><FileText className="w-4 h-4" /> Ajouter<input type="file" accept=".pdf,.doc,.docx,.odt,.txt" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddJobDescription(selectedEmployee.id, f); }} /></Button>
                     )}
                   </TabsContent>
 
-                  {/* DOCUMENTS */}
-                  <TabsContent value="documents" className="mt-4 space-y-3">
-                    <Button variant="outline" className="gap-2 relative">
-                      <FileText className="w-4 h-4" /> Ajouter un document
-                      <input type="file" className="absolute inset-0 opacity-0 cursor-pointer"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddDocument(selectedEmployee.id, f); }} />
-                    </Button>
+                  <TabsContent value="documents" className="space-y-2 mt-4">
+                    <Button variant="outline" className="gap-2 relative w-full text-xs sm:text-sm"><FileText className="w-4 h-4" /> Ajouter<input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddDocument(selectedEmployee.id, f); }} /></Button>
                     {selectedEmployee.documents && selectedEmployee.documents.length > 0 ? (
                       <div className="space-y-2">
                         {selectedEmployee.documents.map((doc) => (
-                          <div key={doc.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition group">
-                            <FileText className="w-4 h-4 text-primary shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{doc.file_name}</p>
-                              <p className="text-xs text-muted-foreground">{doc.uploaded_date}</p>
-                            </div>
-                            <div className="flex gap-2 shrink-0">
-                              <Button size="sm" variant="outline" className="h-8 w-8 p-0"
-                                onClick={() => handleDownloadDocument(doc.url || doc.file_name)}>
-                                <Download className="w-4 h-4" />
-                              </Button>
-                              <Button size="sm" variant="outline"
-                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                                onClick={() => handleDeleteDocumentConfirm(selectedEmployee.id, doc.id, doc.file_name)}>
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
+                          <div key={doc.id} className="flex items-center gap-2 p-2 border rounded-lg hover:bg-muted/30 flex-col sm:flex-row"><FileText className="w-4 h-4 text-primary shrink-0" /><div className="flex-1 min-w-0"><p className="text-xs sm:text-sm font-medium truncate">{doc.file_name}</p><p className="text-[10px] text-muted-foreground">{doc.uploaded_date}</p></div><div className="flex gap-1 shrink-0 w-full sm:w-auto"><Button size="sm" variant="outline" className="h-7 w-7 p-0 flex-1 sm:flex-none" onClick={() => handleDownloadDocument(doc.url || doc.file_name)}><Download className="w-3 h-3" /></Button><Button size="sm" variant="outline" className="h-7 w-7 p-0 text-destructive flex-1 sm:flex-none" onClick={() => handleDeleteDocumentConfirm(selectedEmployee.id, doc.id, doc.file_name)}><Trash2 className="w-3 h-3" /></Button></div></div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-muted-foreground text-sm">Aucun document pour le moment</p>
+                      <p className="text-muted-foreground text-xs">Aucun document</p>
                     )}
                   </TabsContent>
 
-                  {/* FICHES DE PAIE */}
-                  <TabsContent value="salary" className="mt-4 space-y-3">
-                    <Button variant="outline" className="gap-2 relative">
-                      <Wallet className="w-4 h-4" /> Ajouter une fiche de paie
-                      <input type="file" accept=".pdf,.doc,.docx"
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddSalarySlip(selectedEmployee.id, f); }} />
-                    </Button>
+                  <TabsContent value="salary" className="space-y-2 mt-4">
+                    <Button variant="outline" className="gap-2 relative w-full text-xs sm:text-sm"><Wallet className="w-4 h-4" /> Ajouter<input type="file" accept=".pdf,.doc,.docx" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddSalarySlip(selectedEmployee.id, f); }} /></Button>
                     {selectedEmployee.salary_slips && selectedEmployee.salary_slips.length > 0 ? (
                       <div className="space-y-2">
                         {selectedEmployee.salary_slips.map((slip, idx) => (
-                          <div key={idx} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition">
-                            <Wallet className="w-4 h-4 text-primary shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{parseFileEntry(slip).name}</p>
-                            </div>
-                            <div className="flex gap-2 shrink-0">
-                              <Button size="sm" variant="outline" className="h-8 w-8 p-0"
-                                onClick={() => handleDownloadDocument(slip)}>
-                                <Download className="w-4 h-4" />
-                              </Button>
-                              <Button size="sm" variant="outline"
-                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                                onClick={() => handleDeleteSalarySlipConfirm(selectedEmployee.id, idx, parseFileEntry(slip).name)}>
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
+                          <div key={idx} className="flex items-center gap-2 p-2 border rounded-lg hover:bg-muted/30 flex-col sm:flex-row"><Wallet className="w-4 h-4 text-primary shrink-0" /><div className="flex-1 min-w-0"><p className="text-xs sm:text-sm font-medium truncate">{parseFileEntry(slip).name}</p></div><div className="flex gap-1 shrink-0 w-full sm:w-auto"><Button size="sm" variant="outline" className="h-7 w-7 p-0 flex-1 sm:flex-none" onClick={() => handleDownloadDocument(slip)}><Download className="w-3 h-3" /></Button><Button size="sm" variant="outline" className="h-7 w-7 p-0 text-destructive flex-1 sm:flex-none" onClick={() => handleDeleteSalarySlipConfirm(selectedEmployee.id, idx, parseFileEntry(slip).name)}><Trash2 className="w-3 h-3" /></Button></div></div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-muted-foreground text-sm">Aucune fiche de paie</p>
+                      <p className="text-muted-foreground text-xs">Aucune fiche</p>
                     )}
                   </TabsContent>
 
-                  {/* CONTRAT */}
-                  <TabsContent value="contract" className="mt-4 space-y-3">
+                  <TabsContent value="contract" className="space-y-3 mt-4">
                     {selectedEmployee.contract_file ? (
-                      <div className="flex items-center gap-3 p-4 border rounded-lg bg-slate-50">
-                        <File className="w-5 h-5 text-primary shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {parseFileEntry(selectedEmployee.contract_file).name}
-                          </p>
-                        </div>
-                        <div className="flex gap-2 shrink-0">
-                          <Button size="sm" variant="outline" className="gap-1"
-                            onClick={() => handleDownloadDocument(selectedEmployee.contract_file!)}>
-                            <Download className="w-4 h-4" /> Télécharger
-                          </Button>
-                          <Button size="sm" variant="outline" className="gap-1 relative">
-                            <RefreshCw className="w-4 h-4" /> Remplacer
-                            <input type="file" accept=".pdf,.doc,.docx"
-                              className="absolute inset-0 opacity-0 cursor-pointer"
-                              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddContract(selectedEmployee.id, f); }} />
-                          </Button>
-                          <Button size="sm" variant="outline" className="gap-1 text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteContract(selectedEmployee.id)}>
-                            <Trash2 className="w-4 h-4" /> Supprimer
-                          </Button>
-                        </div>
-                      </div>
+                      <div className="flex items-center gap-3 p-3 border rounded-lg bg-slate-50 flex-col sm:flex-row"><File className="w-5 h-5 text-primary shrink-0" /><div className="flex-1 min-w-0"><p className="text-xs sm:text-sm font-medium truncate">{parseFileEntry(selectedEmployee.contract_file).name}</p></div><div className="flex gap-2 shrink-0 w-full sm:w-auto"><Button size="sm" variant="outline" className="gap-1 flex-1 sm:flex-none text-xs" onClick={() => handleDownloadDocument(selectedEmployee.contract_file!)}><Download className="w-4 h-4" /> Dl</Button><Button size="sm" variant="outline" className="gap-1 flex-1 sm:flex-none text-xs relative"><RefreshCw className="w-4 h-4" /> Remplacer<input type="file" accept=".pdf,.doc,.docx" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddContract(selectedEmployee.id, f); }} /></Button><Button size="sm" variant="outline" className="gap-1 flex-1 sm:flex-none text-destructive text-xs" onClick={() => handleDeleteContract(selectedEmployee.id)}><Trash2 className="w-4 h-4" /> Supprimer</Button></div></div>
                     ) : (
-                      <Button variant="outline" className="gap-2 relative">
-                        <File className="w-4 h-4" /> Ajouter un contrat
-                        <input type="file" accept=".pdf,.doc,.docx"
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddContract(selectedEmployee.id, f); }} />
-                      </Button>
+                      <Button variant="outline" className="gap-2 relative w-full text-xs sm:text-sm"><File className="w-4 h-4" /> Ajouter<input type="file" accept=".pdf,.doc,.docx" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddContract(selectedEmployee.id, f); }} /></Button>
                     )}
                   </TabsContent>
 
-                  {/* CV */}
-                  <TabsContent value="cv" className="mt-4 space-y-3">
+                  <TabsContent value="cv" className="space-y-3 mt-4">
                     {selectedEmployee.cv_file ? (
-                      <div className="flex items-center gap-3 p-4 border rounded-lg bg-slate-50">
-                        <File className="w-5 h-5 text-primary shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {parseFileEntry(selectedEmployee.cv_file).name}
-                          </p>
-                        </div>
-                        <div className="flex gap-2 shrink-0">
-                          <Button size="sm" variant="outline" className="gap-1"
-                            onClick={() => handleDownloadDocument(selectedEmployee.cv_file!)}>
-                            <Download className="w-4 h-4" /> Télécharger
-                          </Button>
-                          <Button size="sm" variant="outline" className="gap-1 relative">
-                            <RefreshCw className="w-4 h-4" /> Remplacer
-                            <input type="file" accept=".pdf,.doc,.docx"
-                              className="absolute inset-0 opacity-0 cursor-pointer"
-                              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddCV(selectedEmployee.id, f); }} />
-                          </Button>
-                          <Button size="sm" variant="outline" className="gap-1 text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteCV(selectedEmployee.id)}>
-                            <Trash2 className="w-4 h-4" /> Supprimer
-                          </Button>
-                        </div>
-                      </div>
+                      <div className="flex items-center gap-3 p-3 border rounded-lg bg-slate-50 flex-col sm:flex-row"><File className="w-5 h-5 text-primary shrink-0" /><div className="flex-1 min-w-0"><p className="text-xs sm:text-sm font-medium truncate">{parseFileEntry(selectedEmployee.cv_file).name}</p></div><div className="flex gap-2 shrink-0 w-full sm:w-auto"><Button size="sm" variant="outline" className="gap-1 flex-1 sm:flex-none text-xs" onClick={() => handleDownloadDocument(selectedEmployee.cv_file!)}><Download className="w-4 h-4" /> Dl</Button><Button size="sm" variant="outline" className="gap-1 flex-1 sm:flex-none text-xs relative"><RefreshCw className="w-4 h-4" /> Remplacer<input type="file" accept=".pdf,.doc,.docx" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddCV(selectedEmployee.id, f); }} /></Button><Button size="sm" variant="outline" className="gap-1 flex-1 sm:flex-none text-destructive text-xs" onClick={() => handleDeleteCV(selectedEmployee.id)}><Trash2 className="w-4 h-4" /> Supprimer</Button></div></div>
                     ) : (
-                      <Button variant="outline" className="gap-2 relative">
-                        <File className="w-4 h-4" /> Ajouter un CV
-                        <input type="file" accept=".pdf,.doc,.docx"
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddCV(selectedEmployee.id, f); }} />
-                      </Button>
+                      <Button variant="outline" className="gap-2 relative w-full text-xs sm:text-sm"><File className="w-4 h-4" /> Ajouter<input type="file" accept=".pdf,.doc,.docx" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAddCV(selectedEmployee.id, f); }} /></Button>
                     )}
                   </TabsContent>
                 </Tabs>
@@ -1257,41 +751,13 @@ const Recruitment = () => {
         </div>
       </div>
 
-      {/* DIALOG CONFIRMATION FICHIER */}
+      {/* DIALOGS */}
       <AlertDialog open={fileConfirm.open} onOpenChange={(open) => setFileConfirm(f => ({ ...f, open }))}>
-        <AlertDialogContent>
-          <AlertDialogTitle>{fileConfirm.title}</AlertDialogTitle>
-          <AlertDialogDescription>{fileConfirm.description}</AlertDialogDescription>
-          <div className="flex justify-end gap-2">
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={fileConfirm.onConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Confirmer
-            </AlertDialogAction>
-          </div>
-        </AlertDialogContent>
+        <AlertDialogContent className="w-[95vw] sm:w-full"><AlertDialogTitle className="text-base sm:text-lg">{fileConfirm.title}</AlertDialogTitle><AlertDialogDescription className="text-xs sm:text-sm">{fileConfirm.description}</AlertDialogDescription><div className="flex justify-end gap-2 flex-col-reverse sm:flex-row"><AlertDialogCancel className="text-xs sm:text-sm">Annuler</AlertDialogCancel><AlertDialogAction onClick={fileConfirm.onConfirm} className="bg-destructive text-destructive-foreground text-xs sm:text-sm">Confirmer</AlertDialogAction></div></AlertDialogContent>
       </AlertDialog>
 
-      {/* DIALOG DE SUPPRESSION */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogTitle>Supprimer ce salarié ?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Cette action est irréversible. Le salarié sera définitivement supprimé
-            du système.
-          </AlertDialogDescription>
-          <div className="flex justify-end gap-2">
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Supprimer
-            </AlertDialogAction>
-          </div>
-        </AlertDialogContent>
+        <AlertDialogContent className="w-[95vw] sm:w-full"><AlertDialogTitle className="text-base sm:text-lg">Supprimer ce salarié ?</AlertDialogTitle><AlertDialogDescription className="text-xs sm:text-sm">Cette action est irréversible.</AlertDialogDescription><div className="flex justify-end gap-2 flex-col-reverse sm:flex-row"><AlertDialogCancel className="text-xs sm:text-sm">Annuler</AlertDialogCancel><AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground text-xs sm:text-sm">Supprimer</AlertDialogAction></div></AlertDialogContent>
       </AlertDialog>
     </DashboardLayout>
   );
