@@ -52,6 +52,7 @@ const Users = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showDeletedUsers, setShowDeletedUsers] = useState(false);
   const [resetLoadingId, setResetLoadingId] = useState<string | null>(null);
+  const [roleLoadingId, setRoleLoadingId] = useState<string | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const loadUsers = async () => {
@@ -185,6 +186,28 @@ const Users = () => {
     }
   };
 
+  const updateUserRole = async (targetUserId: string, newRole: string) => {
+    if (targetUserId === profile?.id) return;
+    const targetUser = users.find((u) => u.id === targetUserId);
+    if (targetUser?.role === "superadmin" && !isSuperAdmin) return;
+
+    setRoleLoadingId(targetUserId);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ role: newRole })
+      .eq("id", targetUserId);
+
+    if (error) {
+      toast.error("Erreur lors du changement de rôle : " + error.message);
+    } else {
+      setUsers((prev) =>
+        prev.map((u) => u.id === targetUserId ? { ...u, role: newRole } : u)
+      );
+      toast.success("Rôle mis à jour");
+    }
+    setRoleLoadingId(null);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-8 max-w-6xl">
@@ -293,15 +316,34 @@ const Users = () => {
                       <TableCell>{u.email || "Email non renseigné"}</TableCell>
                       <TableCell>{u.phone || "-"}</TableCell>
                       <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "capitalize",
-                            u.role === "superadmin" && "border-amber-500 text-amber-600 bg-amber-50"
-                          )}
-                        >
-                          {formatRole(u.role)}
-                        </Badge>
+                        {isAdmin && !u.isDeleted && u.id !== profile?.id && !(u.role === "superadmin" && !isSuperAdmin) ? (
+                          <Select
+                            value={u.role ?? ""}
+                            onValueChange={(val) => updateUserRole(u.id, val)}
+                            disabled={roleLoadingId === u.id}
+                          >
+                            <SelectTrigger className="h-7 w-44 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {isSuperAdmin && <SelectItem value="superadmin">Super Admin</SelectItem>}
+                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="commercial">Commercial</SelectItem>
+                              <SelectItem value="developer">Développeur</SelectItem>
+                              <SelectItem value="community_manager">Community Manager</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "capitalize",
+                              u.role === "superadmin" && "border-amber-500 text-amber-600 bg-amber-50"
+                            )}
+                          >
+                            {formatRole(u.role)}
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge variant={u.isDeleted ? "destructive" : "secondary"}>
