@@ -691,23 +691,23 @@ const TaskItem = ({
                 >
                   <Paperclip className="w-4 h-4" /> Ajouter un fichier
                 </DropdownMenuItem>
-                <input
-                  type="file"
-                  multiple
-                  className="hidden"
-                  ref={quickFileRef}
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                      onUploadFile(task, Array.from(e.target.files));
-                      e.target.value = "";
-                    }
-                  }}
-                />
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
       </div>
+      <input
+        type="file"
+        multiple
+        className="hidden"
+        ref={quickFileRef}
+        onChange={(e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            onUploadFile(task, Array.from(e.target.files));
+            e.target.value = "";
+          }
+        }}
+      />
     </div>
 );
 };
