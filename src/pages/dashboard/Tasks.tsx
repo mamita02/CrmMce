@@ -67,9 +67,8 @@ interface Task {
 }
 
 const Tasks = () => {
-  const { isAdmin } = useProfile();
+  const { profile, isAdmin } = useProfile();
 
-  // En situation réelle, on récupèrerait l'id depuis supabase.auth.getSession()
   const [currentUser, setCurrentUser] = useState<{ id: string; name: string }>({
     id: "",
     name: "Chargement...",
@@ -101,17 +100,13 @@ const Tasks = () => {
   // SUPABASE: Charger les données au démarrage
   useEffect(() => {
     const getSessionAndData = async () => {
-      // Récupérer l'utilisateur actuel
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (user) {
         setCurrentUser({
           id: user.id,
           name: user.user_metadata?.full_name || user.email || "Utilisateur",
         });
       }
-
-      // Charger le reste
       fetchTasks();
       fetchProjects();
     };
@@ -320,10 +315,32 @@ const Tasks = () => {
   };
 
   const handleCloseModal = () => {
-  setIsCreateModalOpen(false);
-  setEditingTask(null); // On s'assure de quitter le mode édition
-  resetForm(); // On vide les champs
-};
+    setIsCreateModalOpen(false);
+    setEditingTask(null);
+    resetForm();
+  };
+
+  const uploadAttachmentToTask = async (task: Task, files: File[]) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || files.length === 0) return;
+    try {
+      const uploaded: { name: string; url: string }[] = [];
+      for (const file of files) {
+        const filePath = `${user.id}/${Date.now()}-${file.name}`;
+        const { error: uploadError } = await supabase.storage.from("task-attachments").upload(filePath, file);
+        if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = supabase.storage.from("task-attachments").getPublicUrl(filePath);
+        uploaded.push({ name: file.name, url: publicUrl });
+      }
+      const merged = [...(task.attachments || []), ...uploaded];
+      const { error } = await supabase.from("tasks").update({ attachments: merged }).eq("id", task.id);
+      if (error) throw error;
+      setTasks((prev) => prev.map((t) => t.id === task.id ? { ...t, attachments: merged } : t));
+      toast.success(`${uploaded.length} fichier(s) ajouté(s)`);
+    } catch (err: any) {
+      toast.error("Erreur upload : " + (err.message || err));
+    }
+  };
 
   // Filtrage local pour la réactivité (search & filters)
   const filteredTasks = tasks.filter(task => {
@@ -503,11 +520,12 @@ const Tasks = () => {
               <TaskItem
                 key={task.id}
                 task={task}
-                currentUserId={currentUser.id}
+                currentUserId={profile?.id ?? currentUser.id}
                 isAdmin={isAdmin}
                 onStatusChange={updateTaskStatus}
                 onDelete={deleteTask}
                 onEdit={handleEditClick}
+                onUploadFile={uploadAttachmentToTask}
               />
             ))
           ) : (
@@ -534,16 +552,19 @@ const TaskItem = ({
   isAdmin,
   onStatusChange,
   onDelete,
-  onEdit
+  onEdit,
+  onUploadFile,
 }: {
   task: Task,
   currentUserId: string,
   isAdmin: boolean,
   onStatusChange: (id: string, s: TaskStatus) => void,
   onDelete: (id: string) => void,
-  onEdit: (task: Task) => void
+  onEdit: (task: Task) => void,
+  onUploadFile: (task: Task, files: File[]) => void,
 }) => {
   const canEdit = isAdmin || task.owner_id === currentUserId;
+  const quickFileRef = useRef<HTMLInputElement>(null);
   
   const getFinalStatus = () => {
     if (task.status === "terminee") return "terminee";
@@ -651,8 +672,8 @@ const TaskItem = ({
                     <DropdownMenuItem onClick={() => onEdit(task)}>
                       Modifier
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      className="text-destructive font-semibold" 
+                    <DropdownMenuItem
+                      className="text-destructive font-semibold"
                       onClick={() => onDelete(task.id)}
                     >
                       Supprimer
@@ -663,7 +684,25 @@ const TaskItem = ({
                     Édition restreinte <Lock className="w-3 h-3" />
                   </DropdownMenuItem>
                 )}
-                {/* ATTENTION : Supprime le bloc "SECTION PIÈCES JOINTES" qui était ici précédemment */}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="gap-2"
+                  onClick={() => quickFileRef.current?.click()}
+                >
+                  <Paperclip className="w-4 h-4" /> Ajouter un fichier
+                </DropdownMenuItem>
+                <input
+                  type="file"
+                  multiple
+                  className="hidden"
+                  ref={quickFileRef}
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      onUploadFile(task, Array.from(e.target.files));
+                      e.target.value = "";
+                    }
+                  }}
+                />
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
