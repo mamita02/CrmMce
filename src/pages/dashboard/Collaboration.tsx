@@ -525,7 +525,9 @@ const ProjectCard = ({ project, onViewDetails, onDelete, onEdit, canEdit, canDel
             </div>
           ))}
         </div>
-        <Button variant="outline" size="sm" onClick={onViewDetails} className="h-8 text-xs gap-1"><Eye className="w-3 h-3" /> Détails</Button>
+        <Link to={`/dashboard/projects/${project.id}`}>
+          <Button variant="outline" size="sm" className="h-8 text-xs gap-1"><Eye className="w-3 h-3" /> Détails</Button>
+        </Link>
       </div>
     </div>
   </div>
